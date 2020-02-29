@@ -19,42 +19,232 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 
-
-/**
- *
- * @author psrao
- */
 public class first_frame extends javax.swing.JFrame {
 
-    /**
-     * Creates new form first_frame
-     */
+	   
+    private javax.swing.JButton addButton;
+    private javax.swing.JButton pauseButton;
+    private javax.swing.JButton unpauseButton;
+    private javax.swing.JButton removeButton;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTable jTable1;
+    private ArrayList<Student> students = new ArrayList<Student>() ;
+   
+    //constructor for student page
     public first_frame() {
         initComponents();
-        jLabel1.setVisible(false);
+        jLabel1.setVisible(true);
         addDefaultRowToTables();
-        jButton4.setEnabled(false);
-        jButton2.setEnabled(false);
-        jButton3.setEnabled(false);
-        //jButton1.setEnabled(false);\
+        removeButton.setEnabled(false);
+        pauseButton.setEnabled(false);
+        unpauseButton.setEnabled(false);
+       
+    }
+    
+    //method to populate student queue with 0-4 entries
+    public void addDefaultRowToTables(){
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        ArrayList<Student>templist = ListStudents();
+        int noOfRows = ThreadLocalRandom.current().nextInt(0,5);
+        Object rowData[] = new Object[3];
+        
+        if(noOfRows != 0){
+           for(int i =1; i<=noOfRows; i++){
+               
+            rowData[0] = templist.get(i-1).userName;
+            if (templist.get(i-1).paused == false){
+                rowData[1] = "Unpaused";
+            }
+            Student s = new Student(templist.get(i-1).userName,templist.get(i-1).passWord,templist.get(i-1).email);
+            students.add(s);
+            model.addRow(rowData);
+        } 
+        }
+        if(students.isEmpty()){
+            jLabel1.setVisible(true);
+        } else{
+            jLabel1.setVisible(false);
+        }
+        
+        
+        
         
     }
-    
-    private ArrayList<Student> students = new ArrayList<Student>() ;
-    
-    public ArrayList ListStudents(){
-        ArrayList<Student> slist  = new ArrayList<Student>();
-        Student s1 = new Student("Tony Stark","pass123","tony@avengers.com");
-        Student s2 = new Student("Bruce Banner","pass123","bruce@avengers.com");
-        Student s3 = new Student("Steve Rogers","pass123","steve@avengers.com");
-        Student s4 = new Student("Natasha Romanova","pass123","natasha@avengers.com");
-        slist.add(s1);
-        slist.add(s2);
-        slist.add(s3);
-        slist.add(s4);
-        return slist;
+
+    //remove functionality	
+    private void removeActionPerformed(java.awt.event.ActionEvent evt) {
+        JPasswordField password=new JPasswordField();
+        JLabel label = new JLabel();
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        int selectedRowIndex = jTable1.getSelectedRow();
+        int i = 0;
+        while(i!=selectedRowIndex){
+            i = i+1;
+        }
+        
+        String username = jTable1.getValueAt(i, 0).toString();
+        String email = students.get(selectedRowIndex).email;
+        label.setText(email);
+        
+	Object[] message= {
+            "Email of the student:", email,
+            "Please enter your session password:", password};
+
+        int value = JOptionPane.showConfirmDialog(null, message, "Enter session Password", JOptionPane.OK_CANCEL_OPTION);
+        if (value == JOptionPane.OK_OPTION){
+            String p = new String(password.getPassword());
+            students.remove(selectedRowIndex);
+          
+        }
+        populateTable(students);
+        jTable1.getSelectionModel().clearSelection();
+        removeButton.setEnabled(false);
+        pauseButton.setEnabled(false);
+        unpauseButton.setEnabled(false);
+        
+        
+    }
+
+    //add functionality
+    private void addActionPerformed(java.awt.event.ActionEvent evt) {
+
+        JTextField usernameField = new JTextField();
+        JTextField emailField = new JTextField();
+        JTextField passwordField = new JTextField();
+        JPasswordField password=new JPasswordField();
+        
+        Object[] addStudent = {
+            "Name:", usernameField,
+            "Email:", emailField,
+            "Session Password:", password
+        };
+        JPanel panel = new JPanel();
+        
+        
+        Object[] options = {"Add", "Cancel"};
+        int result = JOptionPane.showOptionDialog(null, addStudent, "Add a user", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, null);
+        if (result == JOptionPane.OK_OPTION){
+            String addName = usernameField.getText();
+            String addEmail = emailField.getText();
+            String addPassword = new String(password.getPassword());
+            boolean emptyName = false;
+            boolean emptyEmail = false;
+            String message = "Please enter a valid ";
+            if (addName.isEmpty()){
+                message+= "Username, ";
+                emptyName = true;
+            }
+            if (addEmail.isEmpty()){
+                emptyEmail = true;
+                message += "Email, ";
+            }
+
+            if(emptyName  || emptyEmail ){
+                message = message.substring(0,message.length()-2);
+                     JOptionPane.showMessageDialog(null, message);
+            
+            } else{
+                
+                if(addName == null){
+                    System.out.println("null");
+                } else{
+                    System.out.println("not empty");
+                }
+                Student s1 = new Student(addName,addPassword,addEmail);
+                students.add(s1);
+                populateTable(students);
+                usernameField.setText("");
+                emailField.setText("");
+                password.setText("");
+            }
+        }
+        jTable1.getSelectionModel().clearSelection();
+        removeButton.setEnabled(false);
+        pauseButton.setEnabled(false);
+        unpauseButton.setEnabled(false);
+    }
+
+
+    //pause functionality
+    private void pauseActionPerformed(java.awt.event.ActionEvent evt) {
+        
+        JPasswordField password=new JPasswordField();
+        JLabel label = new JLabel();
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        int selectedRowIndex = jTable1.getSelectedRow();
+
+        String username = students.get(selectedRowIndex).toString();
+        String email = students.get(selectedRowIndex).email.toString();
+        
+        
+        label.setText(email);
+        
+	Object[] message= {
+            "Email of the student:", email,
+            "Please enter your session password:", password};
+        
+        int value = JOptionPane.showConfirmDialog(null, message, "Enter session Password", JOptionPane.OK_CANCEL_OPTION);
+        if (value == JOptionPane.OK_OPTION){
+            String p = new String(password.getPassword());
+            students.get(selectedRowIndex).paused = true;
+
+        }
+        
+        populateTable(students);
+        jTable1.getSelectionModel().clearSelection();
+        pauseButton.setEnabled(false);
+        removeButton.setEnabled(false);
+        }
+
+    //unpause functionality
+    private void unpauseActionPerformed(java.awt.event.ActionEvent evt) {
+        JPasswordField password=new JPasswordField();
+        JLabel label = new JLabel();
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        int selectedRowIndex = jTable1.getSelectedRow();
+        int i = 0;
+        while(i!=selectedRowIndex){
+            i = i+1;
+        }
+        
+        String username = students.get(selectedRowIndex).toString();
+        String email = students.get(selectedRowIndex).email.toString();
+        label.setText(email);
+        
+	Object[] message= {
+            "Email of the student:", email,
+            "Please enter your session password:", password};
+   
+        int value = JOptionPane.showConfirmDialog(null, message, "Enter session Password", JOptionPane.OK_CANCEL_OPTION);
+        if (value == JOptionPane.OK_OPTION){
+            String p = new String(password.getPassword());
+            students.get(selectedRowIndex).paused = false;
+        }
+        
+        populateTable(students);
+        jTable1.getSelectionModel().clearSelection();
+        unpauseButton.setEnabled(false);
+        removeButton.setEnabled(false);
+ 
     }
     
+    //table click listener
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {
+        removeButton.setEnabled(true);
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        int selectedRowIndex = jTable1.getSelectedRow();
+        
+        String status = jTable1.getValueAt(selectedRowIndex, 1).toString();
+        if (status.equals("Unpaused")){
+            pauseButton.setEnabled(true);
+        } else{
+            unpauseButton.setEnabled(true);
+        }
+        
+    }
+
+    //method to populate the front end table at the end of an action
     public void populateTable(ArrayList<Student> slist){
         DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
         model.setRowCount(0);
@@ -78,62 +268,39 @@ public class first_frame extends javax.swing.JFrame {
         }
     }
     
-    public void addDefaultRowToTables(){
-        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-        ArrayList<Student>templist = ListStudents();
-        int noOfRows = ThreadLocalRandom.current().nextInt(0,5);
-        Object rowData[] = new Object[3];
-        
-        if(noOfRows != 0){
-           for(int i =1; i<=noOfRows; i++){
-               
-            rowData[0] = templist.get(i-1).userName;
-            //rowData[1] = templist.get(i-1).email;
-            //rowData[2] = students.get(i-1).email;
-            if (templist.get(i-1).paused == false){
-                rowData[1] = "Unpaused";
-                
-            }
-            Student s = new Student(templist.get(i-1).userName,templist.get(i-1).passWord,templist.get(i-1).email);
-            //System.out.println(s);
-            students.add(s);
-            model.addRow(rowData);
-        } 
-        }
-        if(students.isEmpty()){
-            jLabel1.setVisible(true);
-        } else{
-            jLabel1.setVisible(false);
-        }
-        
-        
-        
-        
+    //prepopulated list
+    public ArrayList ListStudents(){
+        ArrayList<Student> slist  = new ArrayList<Student>();
+        Student s1 = new Student("Tony Stark","pass123","tony@avengers.com");
+        Student s2 = new Student("Bruce Banner","pass123","bruce@avengers.com");
+        Student s3 = new Student("Steve Rogers","pass123","steve@avengers.com");
+        Student s4 = new Student("Natasha Romanova","pass123","natasha@avengers.com");
+        slist.add(s1);
+        slist.add(s2);
+        slist.add(s3);
+        slist.add(s4);
+        return slist;
     }
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
+    
+
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jButton1 = new javax.swing.JButton();
+        addButton = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
+        pauseButton = new javax.swing.JButton();
+        unpauseButton = new javax.swing.JButton();
+        removeButton = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jButton1.setText("Add");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        addButton.setText("Add");
+        addButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                addActionPerformed(evt);
             }
         });
 
@@ -160,24 +327,24 @@ public class first_frame extends javax.swing.JFrame {
         });
         jScrollPane1.setViewportView(jTable1);
 
-        jButton2.setText("Pause");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
+        pauseButton.setText("Pause");
+        pauseButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+                pauseActionPerformed(evt);
             }
         });
 
-        jButton3.setText("Unpause");
-        jButton3.addActionListener(new java.awt.event.ActionListener() {
+        unpauseButton.setText("Unpause");
+        unpauseButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton3ActionPerformed(evt);
+                unpauseActionPerformed(evt);
             }
         });
 
-        jButton4.setText("Remove");
-        jButton4.addActionListener(new java.awt.event.ActionListener() {
+        removeButton.setText("Remove");
+        removeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4ActionPerformed(evt);
+                removeActionPerformed(evt);
             }
         });
 
@@ -190,14 +357,14 @@ public class first_frame extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jButton4, javax.swing.GroupLayout.DEFAULT_SIZE, 98, Short.MAX_VALUE)
-                    .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(removeButton, javax.swing.GroupLayout.DEFAULT_SIZE, 98, Short.MAX_VALUE)
+                    .addComponent(addButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 465, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(unpauseButton, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(pauseButton, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(15, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -213,460 +380,22 @@ public class first_frame extends javax.swing.JFrame {
                         .addGap(86, 86, 86)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jButton2)
+                                .addComponent(pauseButton)
                                 .addGap(52, 52, 52)
-                                .addComponent(jButton3))
+                                .addComponent(unpauseButton))
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jButton1)
+                                .addComponent(addButton)
                                 .addGap(44, 44, 44)
-                                .addComponent(jButton4)))))
+                                .addComponent(removeButton)))))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 23, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         pack();
-    }// </editor-fold>//GEN-END:initComponents
-
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        // TODO add your handling code here:
-        JPasswordField password=new JPasswordField();
-        JLabel label = new JLabel();
-        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-        int selectedRowIndex = jTable1.getSelectedRow();
-        int i = 0;
-        while(i!=selectedRowIndex){
-            i = i+1;
-        }
-        
-        String username = jTable1.getValueAt(i, 0).toString();
-        String email = students.get(selectedRowIndex).email;
-        label.setText(email);
-        
-	Object[] message= {
-            "Email of the student:", email,
-            "Please enter your session password:", password};
-        
-	//Object[] message= {"Please enter your session password", password};
-        int value = JOptionPane.showConfirmDialog(null, message, "Enter session Password", JOptionPane.OK_CANCEL_OPTION);
-        if (value == JOptionPane.OK_OPTION){
-            String p = new String(password.getPassword());
-            students.remove(selectedRowIndex);
-//            if (students.get(i).userName.equals(username) && students.get(i).email.equals(email)){
-//                        students.get(i).paused = true;
-//                        
-//                    }
-//            
-//            
-//            if(!(p.equals("") || p.isEmpty())) {
-//                DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-//                int selectedRowIndex = jTable1.getSelectedRow();
-//                String username = jTable1.getValueAt(selectedRowIndex, 0).toString();
-//                String email = jTable1.getValueAt(selectedRowIndex, 1).toString();
-//                for (int i = 0; i<students.size();i++){
-//
-//                    if (students.get(i).userName.equals(username) && students.get(i).email.equals(email)){
-//                        students.remove(i);
-//                        break;
-//                    }
-//                }
-//                //model.removeRow(selectedRowIndex);
-//                
-//            }else {
-//					JOptionPane.showMessageDialog(null,  "Please enter password");
-//				}
-//            
-        }
-        populateTable(students);
-        jTable1.getSelectionModel().clearSelection();
-        jButton4.setEnabled(false);
-        jButton2.setEnabled(false);
-        jButton3.setEnabled(false);
-        
-        
-    }//GEN-LAST:event_jButton4ActionPerformed
-
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
-        
-//        List<JTextField> list = new ArrayList<>();
-//        list.add(jTextField1);
-//        list.add(jTextField2);
-//        list.add(jTextField3);
-//        DocumentListener listener = new DocumentListener() {
-//            @Override
-//            public void removeUpdate(DocumentEvent e) { changedUpdate(e); }
-//            @Override
-//            public void insertUpdate(DocumentEvent e) { changedUpdate(e); }
-//
-//            @Override
-//            public void changedUpdate(DocumentEvent e) {
-//                boolean canEnable = true;
-//                for (JTextField tf : list) {
-//                    if (tf.getText().isEmpty()) {
-//                        canEnable = false;
-//                        System.out.println("came");
-//                    }
-//                }
-//                jButton1.setEnabled(canEnable);
-//            }
-//        };
-//        
-//        for (JTextField tf : list) {
-//            tf.getDocument().addDocumentListener(listener);
-//        }
-        
-
-//        ButtonModel model = jButton1.getModel();
-//        Document document1 = jTextField1.getDocument();
-//        Document document2 = jTextField2.getDocument();
-//        Document document3 = jTextField3.getDocument();
-//
-//        ButtonEnablement buttonEnablement = new ButtonEnablement(model);
-//        buttonEnablement.addDocument(document1);
-//        buttonEnablement.addDocument(document2);
-//        buttonEnablement.addDocument(document3);
-//        
-        
-        JTextField usernameField = new JTextField();
-        JTextField emailField = new JTextField();
-        JTextField passwordField = new JTextField();
-        JPasswordField password=new JPasswordField();
-        
-        Object[] addStudent = {
-            "Name:", usernameField,
-            "Email:", emailField,
-            "Session Password:", password
-        };
-        JPanel panel = new JPanel();
-        
-        
-        Object[] options = {"Add", "Cancel"};
-        int result = JOptionPane.showOptionDialog(null, addStudent, "Add a user", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, null);
-        if (result == JOptionPane.OK_OPTION){
-            String addName = usernameField.getText();
-            String addEmail = emailField.getText();
-            //String addPassword = passwordField.getText();
-            String addPassword = new String(password.getPassword());
-            boolean emptyName = false;
-            //boolean emptyPassword = false;
-            boolean emptyEmail = false;
-            String message = "Please enter a valid ";
-            if (addName.isEmpty()){
-                message+= "Username, ";
-                emptyName = true;
-            }
-            if (addEmail.isEmpty()){
-                emptyEmail = true;
-                message += "Email, ";
-            }
-//            if (addPassword.isEmpty()){
-//                message+= "Password, ";
-//                emptyPassword = true;
-//            }
-            if(emptyName  || emptyEmail ){
-                message = message.substring(0,message.length()-2);
-//                final String newmess = message;
-//                Thread t = new Thread(new Runnable(){
-//                    
-//                        public void run(){
-                            JOptionPane.showMessageDialog(null, message);
-//                        }
-//                    });
-//                t.start();
-//            
-            
-            } else{
-                
-                if(addName == null){
-                    System.out.println("null");
-                } else{
-                    System.out.println("not empty");
-                }
-                Student s1 = new Student(addName,addPassword,addEmail);
-                students.add(s1);
-                populateTable(students);
-                usernameField.setText("");
-                emailField.setText("");
-                password.setText("");
-            }
-        }
-        jTable1.getSelectionModel().clearSelection();
-        jButton4.setEnabled(false);
-        jButton2.setEnabled(false);
-        jButton3.setEnabled(false);
-        
-        
-        
-//        String username = jTextField1.getText();
-//        String email = jTextField2.getText();
-//        String password = new String(jPasswordField1.getPassword());
-//        boolean emptyname = false;
-//        boolean emptypassword = false;
-//        boolean emptyemail = false;
-//        String message = "Please enter a valid ";
-//        if(username.isEmpty()){
-//            message += " Username, ";
-//            emptyname = true;
-//        }
-//        if (email.isEmpty()){
-//            emptyemail = true;
-//            message += "Email, ";
-//            
-//        }
-//        if (password.isEmpty()){
-//            message += "Password, ";
-//            emptypassword = true;
-//        }
-//        
-//        if(emptyname || emptypassword || emptyemail ){
-//            message = message.substring(0,message.length()-2);
-//            JOptionPane.showMessageDialog(null, message);
-//            
-//        } else{
-////            if(username == null){
-////                System.out.println("null");
-////            } else{
-////                System.out.println("not empty");
-////            }
-//            Student s1 = new Student(username,password,email);
-//            students.add(s1);
-//            populateTable(students);
-//            jTextField1.setText("");
-//            jTextField2.setText("");
-//            jPasswordField1.setText("");
-//        }
-//        
-//        
-//        
-////        Object rowData[] = new Object[4];
-////        
-////        rowData[0] = s1.userName;
-////        rowData[1] = s1.email;
-////        rowData[2] = "Unpaused";
-////        
-////        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-////        model.addRow(rowData);
-//        //jButton1.setEnabled(true);
-//        
-//        jTable1.getSelectionModel().clearSelection();
-//        jButton4.setEnabled(false);
-//        jButton2.setEnabled(false);
-//        jButton3.setEnabled(false);
-//        
-//        //System.out.println(students);
-//        
-
-        
-        
-        
-        
-    }//GEN-LAST:event_jButton1ActionPerformed
-
-    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
-        // TODO add your handling code here:
-        jButton4.setEnabled(true);
-        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-        int selectedRowIndex = jTable1.getSelectedRow();
-        
-        String status = jTable1.getValueAt(selectedRowIndex, 1).toString();
-        if (status.equals("Unpaused")){
-            jButton2.setEnabled(true);
-        } else{
-            jButton3.setEnabled(true);
-        }
-        
-        
-        
-    }//GEN-LAST:event_jTable1MouseClicked
-
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        // TODO add your handling code here:
-        JPasswordField password=new JPasswordField();
-        JLabel label = new JLabel();
-        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-        int selectedRowIndex = jTable1.getSelectedRow();
-//        int i = 0;
-//        while(i!=selectedRowIndex){
-//            i = i+1;
-//        }
-        String username = students.get(selectedRowIndex).toString();
-        String email = students.get(selectedRowIndex).email.toString();
-        
-        //String email = jTable1.getValueAt(i, 1).toString();
-        
-        label.setText(email);
-        
-	Object[] message= {
-            "Email of the student:", email,
-            "Please enter your session password:", password};
-        
-        int value = JOptionPane.showConfirmDialog(null, message, "Enter session Password", JOptionPane.OK_CANCEL_OPTION);
-        if (value == JOptionPane.OK_OPTION){
-            String p = new String(password.getPassword());
-            students.get(selectedRowIndex).paused = true;
-//            if (students.get(i).userName.equals(username) && students.get(i).email.equals(email)){
-//                        students.get(i).paused = true;
-//                        
-//                    }
-            //if(!(p.equals("") || p.isEmpty())) {
-//                DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-//                int selectedRowIndex = jTable1.getSelectedRow();
-//                String username = jTable1.getValueAt(selectedRowIndex, 0).toString();
-//                String email = jTable1.getValueAt(selectedRowIndex, 1).toString();
-                
-//                for (int i = 0; i<students.size();i++){
-//
-//                    if (students.get(i).userName.equals(username) && students.get(i).email.equals(email)){
-//                        students.get(i).paused = true;
-//                        break;
-//                    }
-//                }
-//            }else {
-//                    JOptionPane.showMessageDialog(null,  "Please enter password");
-//            }
-
-
-        }
-        
-        populateTable(students);
-        jTable1.getSelectionModel().clearSelection();
-        jButton2.setEnabled(false);
-        jButton4.setEnabled(false);
-        
-        
-        
-        
-    }//GEN-LAST:event_jButton2ActionPerformed
-
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        // TODO add your handling code here:
-        JPasswordField password=new JPasswordField();
-        JLabel label = new JLabel();
-        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-        int selectedRowIndex = jTable1.getSelectedRow();
-        int i = 0;
-        while(i!=selectedRowIndex){
-            i = i+1;
-        }
-        
-        String username = students.get(selectedRowIndex).toString();
-        String email = students.get(selectedRowIndex).email.toString();
-//        String username = jTable1.getValueAt(i, 0).toString();
-//        String email = jTable1.getValueAt(i, 1).toString();
-        label.setText(email);
-        
-	Object[] message= {
-            "Email of the student:", email,
-            "Please enter your session password:", password};
-        
-	//Object[] message= {"Please enter your session password", password};
-        int value = JOptionPane.showConfirmDialog(null, message, "Enter session Password", JOptionPane.OK_CANCEL_OPTION);
-        if (value == JOptionPane.OK_OPTION){
-            String p = new String(password.getPassword());
-            students.get(selectedRowIndex).paused = false;
-//            if (students.get(i).userName.equals(username) && students.get(i).email.equals(email)){
-//                        students.get(i).paused = false;
-//                        
-//                    }
-//            if(!(p.equals("") || p.isEmpty())) {
-//                DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-//                int selectedRowIndex = jTable1.getSelectedRow();
-//                String username = jTable1.getValueAt(selectedRowIndex, 0).toString();
-//                String email = jTable1.getValueAt(selectedRowIndex, 1).toString();
-//                for (int i = 0; i<students.size();i++){
-//
-//                    if (students.get(i).userName.equals(username) && students.get(i).email.equals(email)){
-//                        students.get(i).paused = false;
-//                        break;
-//                    }
-//                }
-//            }else {
-//                    JOptionPane.showMessageDialog(null,  "Please enter password");
-//            }
-//
-
-        }
-        
-        populateTable(students);
-        jTable1.getSelectionModel().clearSelection();
-        jButton3.setEnabled(false);
-        jButton4.setEnabled(false);
-        
-//        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-//        int selectedRowIndex = jTable1.getSelectedRow();
-//        String username = jTable1.getValueAt(selectedRowIndex, 0).toString();
-//        String email = jTable1.getValueAt(selectedRowIndex, 1).toString();
-//        for (int i = 0; i<students.size();i++){
-//
-//            if (students.get(i).userName.equals(username) && students.get(i).email.equals(email)){
-//                students.get(i).paused = false;
-//                break;
-//            }
-//        }
-//        populateTable(students);
-//        jTable1.getSelectionModel().clearSelection();
-//        jButton3.setEnabled(false);
-//        jButton4.setEnabled(false);
-          
-    }//GEN-LAST:event_jButton3ActionPerformed
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(first_frame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(first_frame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(first_frame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(first_frame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new first_frame().setVisible(true);
-            }
-        });
     }
-//    
-//    public class Student{
-//        String name, email, password;
-//        public Student(String n, String e, String p){
-//            
-//            this.name = n;
-//            this.email = e;
-//            this.password = p;
-//            
-//        }
-//    
-//}
-    
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
-    // End of variables declaration//GEN-END:variables
+
+
 }
 
 
